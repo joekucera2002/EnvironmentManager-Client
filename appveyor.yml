@@ -1,0 +1,22 @@
+version: 0.1.0.{build}
+clone_folder: c:\projects\em-client
+
+init:
+  - ps: Install-Product node $env:nodejs_version
+
+environment:
+  nodejs_version: 16
+  root_directory: c:\projects\em-client
+  build_directory: $env:root_directory\src\build
+
+install:
+  - cmd: >-
+      cd .\src
+
+      npm install
+
+build_script:
+  - ps: npm run build
+
+after_build:
+  - ps: $root = Resolve-Path $env:build_directory; [IO.Directory]::GetFiles($root.Path, '*.*', 'AllDirectories') | % { Push-AppveyorArtifact $_ -FileName $_.Substring($root.Path.Length + 1) -DeploymentName to-publish }
