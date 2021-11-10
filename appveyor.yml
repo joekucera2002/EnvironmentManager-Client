@@ -6,17 +6,22 @@ init:
 
 environment:
   nodejs_version: 16
-  root_directory: c:\projects\em-client
-  build_directory: $env:root_directory\src\build
 
 install:
-  - cmd: >-
-      cd .\src
-
-      npm install
+  - cmd: npm install
 
 build_script:
-  - ps: npm run build
+  - cmd: npm run build
 
-after_build:
-  - ps: $root = Resolve-Path $env:build_directory; [IO.Directory]::GetFiles($root.Path, '*.*', 'AllDirectories') | % { Push-AppveyorArtifact $_ -FileName $_.Substring($root.Path.Length + 1) -DeploymentName to-publish }
+test_script:
+  - cmd: npm run test:cover
+
+on_success:
+  - ps: >-
+      Invoke-WebRequest -Uri https://uploader.codecov.io/latest/windows/codecov.exe -Outfile codecov.exe
+
+      .\codecov.exe
+
+artifacts:
+  - path: build
+    name: EnvironmentManager-Client_$(APPVEYOR_BUILD_VERSION)
